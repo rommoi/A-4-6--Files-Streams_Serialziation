@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
@@ -16,7 +17,12 @@ namespace Advence.Lesson_6
         /// Дата создания
         /// </summary>
         public static void AL6_P1_7_DirInfo()
-        {           
+        {
+            //var dn = new DriveInfo("c://Program Files");
+            //DateTime fi = Directory.GetCreationTime("c://Program Files");
+
+            //Console.WriteLine($"Name: {dn.Name}, {fi}");
+            Console.WriteLine($"{new DriveInfo("c://Program Files").Name}, {Directory.GetCreationTime("c://Program Files")}, {Directory.GetCreationTimeUtc("c://Program Files")}");
         }
 
 
@@ -28,6 +34,12 @@ namespace Advence.Lesson_6
         /// </summary>
         public static void AL6_P2_7_FileInfo()
         {
+            
+            foreach (var item in new DirectoryInfo("c://totalcmd").GetFiles())
+            {
+                Console.WriteLine($"{item.FullName, -25} _ {item.CreationTime, -25} _ {item.Length, -10} bytes");
+            }
+
         }
 
         /// <summary>
@@ -35,6 +47,7 @@ namespace Advence.Lesson_6
         /// </summary>
         public static void AL6_P3_7_CreateDir()
         {
+            var cr = Directory.CreateDirectory(@"c://Copy__AAAAA");
         }
 
 
@@ -43,7 +56,13 @@ namespace Advence.Lesson_6
         /// </summary>
         public static void AL6_P4_7_CopyFile()
         {
+            AL6_P3_7_CreateDir();
 
+            var di = new DirectoryInfo("c://totalcmd").GetFiles()[0];
+            Console.WriteLine(di.FullName);
+            di.CopyTo(System.IO.Path.Combine(@"c://Copy__AAAAA", di.Name), true);
+            
+            
         }
 
         /// <summary>
@@ -51,7 +70,26 @@ namespace Advence.Lesson_6
         /// Пускай в ней будут по очереди запрашивается реплики для User 1 и User 2 (используйте цикл из 5-10 итераций).  Сохраняйте данные реплики с ником пользователя и датой в файл на диске.
         /// </summary>
         private static void AL6_P5_7_FileChat()
-        {           
+        {
+            Console.WriteLine("Enter first Name1:");
+            string name1 = Console.ReadLine();
+            Console.WriteLine("Enter first Name2:");
+            string name2 = Console.ReadLine();
+
+            using(StreamWriter sr = new StreamWriter(@"cha.txt"))
+            {
+                for (int i = 0; i < 5; i++)
+                {
+                    Console.WriteLine($"Enter {name1} phrase");
+                    sr.Write(Console.ReadLine());
+                    sr.WriteLine();
+                    Console.WriteLine($"Enter {name2} phrase");
+                    sr.Write(Console.ReadLine());
+                    sr.WriteLine();
+
+                    sr.Flush();
+                }
+            }
         }
 
         /// <summary>
@@ -67,6 +105,26 @@ namespace Advence.Lesson_6
                 Duration = 247,
                 Lyrics = "Lyrics 1"
             };
+
+            StringBuilder sb = new StringBuilder();
+
+            XmlSerializer xmlSer = new XmlSerializer(typeof(Song));
+
+
+            using(StringWriter sw = new StringWriter(sb))
+            {
+                xmlSer.Serialize(sw, song);        //Serialization
+                Console.WriteLine(sw.ToString());
+
+                
+            }
+            Console.WriteLine();
+            using(StringReader sr = new StringReader(sb.ToString())) //using stringBuilder as storage
+            {
+                Song deserSong = (Song)xmlSer.Deserialize(sr); //deserialization
+                Console.WriteLine(deserSong.ToString());       //using overrided method to out object props to Console
+
+            }
            
         }
 
@@ -76,6 +134,27 @@ namespace Advence.Lesson_6
         /// </summary>
         public static void AL6_P7_7_FileSrlz()
         {
+            Song song = new Song()
+            {
+                Title = "Title 1",
+                Duration = 247,
+                Lyrics = "Lyrics 1"
+            };
+
+            XmlSerializer xmlSer = new XmlSerializer(typeof(Song));
+
+            using(FileStream fs = new FileStream("serializedSong.ss", FileMode.OpenOrCreate))
+            {
+                xmlSer.Serialize(fs, song);
+                Console.WriteLine(song.ToString());
+                Console.WriteLine("Object serialized..");
+            }
+            using(FileStream fs = new FileStream("serializedSong.ss", FileMode.Open))
+            {
+                Song deserSong = (Song)xmlSer.Deserialize(fs);
+                Console.WriteLine("Object deserialized..");
+                Console.WriteLine(deserSong.ToString());
+            }
 
         }
 
